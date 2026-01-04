@@ -21,9 +21,32 @@ class MercadoPago extends Payment
     protected $code = 'mercadopago';
 
     /**
+     * Check if payment method is available.
+     *
+     * @return bool
+     */
+    public function isAvailable()
+    {
+        // Check if payment method is active
+        if (! parent::isAvailable()) {
+            return false;
+        }
+
+        // Check if required credentials are configured
+        $publicKey = $this->getConfigData('public_key');
+        $accessToken = $this->getConfigData('access_token');
+
+        if (empty($publicKey) || empty($accessToken)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Mercado Pago SDK instance
      *
-     * @var \MercadoPago\SDK
+     * @var mixed
      */
     protected $mercadopago;
 
@@ -65,46 +88,63 @@ class MercadoPago extends Payment
             $this->setCart();
         }
 
-        $preference = $this->createPreference($this->cart);
-        
-        return $this->getConfigData('sandbox') 
-            ? $preference->sandbox_init_point 
-            : $preference->init_point;
+        try {
+            $preference = $this->createPreference($this->cart);
+            
+            if (! $preference) {
+                return false;
+            }
+            
+            return $this->getConfigData('sandbox') 
+                ? ($preference->sandbox_init_point ?? $preference->init_point)
+                : $preference->init_point;
+                
+        } catch (\Exception $e) {
+            // Log error and return false to prevent checkout issues
+            \Log::error('Mercado Pago getRedirectUrl error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
      * Create a preference in Mercado Pago
      *
      * @param  \Webkul\Checkout\Contracts\Cart  $cart
-     * @return \MercadoPago\Resources\Preference
+     * @return \MercadoPago\Resources\Preference|null
      */
     protected function createPreference($cart)
     {
-        $client = new PreferenceClient();
-        
-        // Configurar itens do carrinho
-        $items = $this->getItems($cart);
-        
-        // Configurar pagador
-        $payer = $this->getPayer($cart);
-        
-        // Criar preferência
-        $preference = [
-            'items' => $items,
-            'payer' => $payer,
-            'back_urls' => [
-                'success' => route('mercadopago.success'),
-                'failure' => route('mercadopago.failure'),
-                'pending' => route('mercadopago.pending'),
-            ],
-            'auto_return' => 'approved',
-            'external_reference' => $cart->id,
-            'notification_url' => route('mercadopago.webhook'),
-        ];
-        
-        $result = $client->create($preference);
-        
-        return $result;
+        try {
+            $client = new PreferenceClient();
+            
+            // Configurar itens do carrinho
+            $items = $this->getItems($cart);
+            
+            // Configurar pagador
+            $payer = $this->getPayer($cart);
+            
+            // Criar preferência
+            $preference = [
+                'items' => $items,
+                'payer' => $payer,
+                'back_urls' => [
+                    'success' => route('mercadopago.success'),
+                    'failure' => route('mercadopago.failure'),
+                    'pending' => route('mercadopago.pending'),
+                ],
+                'auto_return' => 'approved',
+                'external_reference' => $cart->id,
+                'notification_url' => route('mercadopago.webhook'),
+            ];
+            
+            $result = $client->create($preference);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago createPreference error: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
