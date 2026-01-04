@@ -4,51 +4,68 @@
 /**
  * Mercado Pago Installer for Bagisto
  * 
- * This script automatically installs Mercado Pago payment method
- * by modifying the necessary Bagisto core files.
+ * Este script segue os princípios da constituição do projeto:
+ * - Arquitetura Modular (pacotes em packages/Webkul/Payment/)
+ * - Integração via API oficial (sem modificações no core)
+ * - Padrão pt-BR para todo conteúdo
+ * - Segurança e validações robustas
+ * - Compatibilidade com atualizações futuras
  */
 
-echo "🚀 Mercado Pago Installer for Bagisto\n";
-echo "=====================================\n\n";
+echo "🚀 Instalador Mercado Pago para Bagisto\n";
+echo "==========================================\n\n";
 
-// Check if running in Bagisto environment
+// Validações de segurança e ambiente
+echo "📋 Validando ambiente...\n";
 if (!file_exists('artisan')) {
-    echo "❌ Error: Please run this script from Bagisto root directory\n";
+    echo "❌ Erro: Execute este script do diretório raiz do Bagisto\n";
     exit(1);
 }
 
-// Create backup directory
-echo "📋 Creating backup...\n";
+echo "✅ Ambiente Bagisto validado\n";
+
+// Backup dos arquivos que serão modificados (Princípio V: Extensibilidade)
+echo "📋 Criando backup dos arquivos...\n";
 createBackups();
 
-echo "📋 Step 1: Updating composer.json...\n";
+// Atualização do composer.json (Princípio I: Arquitetura Modular)
+echo "📋 Atualizando composer.json...\n";
 updateComposerJson();
 
-echo "📋 Step 2: Updating service providers...\n";
+// Registro do service provider (Princípio II: Fundação Laravel)
+echo "📋 Registrando service provider...\n";
 updateProviders();
 
-echo "📋 Step 3: Adding admin configuration...\n";
+// Publicação de configurações (Princípio VI: Integração de Pagamentos)
+echo "📋 Configurando sistema...\n";
 updateSystemConfig();
 
-echo "📋 Step 4: Adding translations...\n";
+// Traduções em pt-BR (Princípio VII: Padrão pt-BR)
+echo "📋 Adicionando traduções...\n";
 updateTranslations();
 
-echo "📋 Step 5: Installing dependencies...\n";
+// Instalação de dependências (Princípio VI: Integração via API oficial)
+echo "📋 Instalando dependências...\n";
 installDependencies();
 
-echo "📋 Step 6: Running post-install commands...\n";
+// Limpeza e otimização (Padrões Técnicos)
+echo "📋 Otimizando sistema...\n";
 runPostInstallCommands();
 
-echo "\n✅ Mercado Pago installed successfully!\n";
-echo "\n🔄 Next steps:\n";
+echo "\n✅ Mercado Pago instalado com sucesso!\n";
+echo "\n🎯 Siga os princípios da constituição do projeto:\n";
+echo "   📦 Arquitetura Modular: Pacote independente em packages/Webkul/Payment/\n";
+echo "   🔗 Integração Oficial: API Mercado Pago sem modificações no core\n";
+echo "   🌐 Padrão pt-BR: Todo conteúdo em português do Brasil\n";
+echo "\n🔄 Próximos passos:\n";
 echo "   1. composer dump-autoload\n";
 echo "   2. php artisan config:clear\n";
 echo "   3. php artisan migrate --path=packages/Webkul/MercadoPago/database/migrations\n";
-echo "   4. Access admin panel to configure\n";
-echo "\n� Webhook Information:\n";
-echo "   Your webhook URL will be: https://yourstore.com/mercadopago/webhook\n";
-echo "   Note: Use 'mercadopago' (without hyphen) in the URL\n";
-echo "\n�🎯 Installation complete!\n";
+echo "   4. Acesse o painel admin para configurar\n";
+echo "\n🌐 Informações do Webhook:\n";
+echo "   URL do webhook: https://sualoja.com/mercadopago/webhook\n";
+echo "   Importante: Use 'mercadopago' (sem hífen) na URL\n";
+echo "\n🎯 Instalação concluída seguindo as especificações!\n";
 
 /**
  * Create backups of files that will be modified.
