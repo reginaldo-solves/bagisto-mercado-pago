@@ -17,12 +17,46 @@ echo "==========================================\n\n";
 
 // Validações de segurança e ambiente
 echo "📋 Validando ambiente...\n";
+
+// Verificar se está no diretório raiz do Bagisto
 if (!file_exists('artisan')) {
     echo "❌ Erro: Execute este script do diretório raiz do Bagisto\n";
+    echo "ℹ️  O arquivo 'artisan' não foi encontrado no diretório atual\n";
     exit(1);
 }
 
+// Verificar se é um projeto Bagisto válido
+if (!file_exists('composer.json')) {
+    echo "❌ Erro: composer.json não encontrado\n";
+    echo "ℹ️  Isso não parece ser um projeto Laravel/Bagisto válido\n";
+    exit(1);
+}
+
+// Verificar se o composer.json contém Bagisto
+$composer = json_decode(file_get_contents('composer.json'), true);
+if (!isset($composer['require']['bagisto/bagisto'])) {
+    echo "❌ Erro: Este não parece ser um projeto Bagisto\n";
+    echo "ℹ️  O pacote 'bagisto/bagisto' não foi encontrado no composer.json\n";
+    exit(1);
+}
+
+// Verificar estrutura de diretórios essenciais
+$requiredDirs = [
+    'packages/Webkul/Admin',
+    'packages/Webkul/Shop',
+    'bootstrap',
+    'config'
+];
+
+foreach ($requiredDirs as $dir) {
+    if (!is_dir($dir)) {
+        echo "⚠️  Aviso: Diretório essencial não encontrado: {$dir}\n";
+        echo "ℹ️  Isso pode indicar uma instalação Bagisto incompleta\n";
+    }
+}
+
 echo "✅ Ambiente Bagisto validado\n";
+echo "📋 Versão do Bagisto: " . ($composer['require']['bagisto/bagisto'] ?? 'Desconhecida') . "\n\n";
 
 // Backup dos arquivos que serão modificados (Princípio V: Extensibilidade)
 echo "📋 Criando backup dos arquivos...\n";
@@ -99,7 +133,10 @@ function createBackups()
     $backupDir = 'backup_mercadopago_' . date('Y-m-d_H-i-s');
     
     if (!is_dir($backupDir)) {
-        mkdir($backupDir, 0755, true);
+        if (!mkdir($backupDir, 0755, true)) {
+            echo "⚠️  Warning: Could not create backup directory. Continuing without backup.\n";
+            return false;
+        }
     }
     
     $filesToBackup = [
@@ -110,15 +147,26 @@ function createBackups()
         'packages/Webkul/Admin/src/Resources/lang/pt_BR/app.php'
     ];
     
+    $backupCount = 0;
     foreach ($filesToBackup as $file) {
         if (file_exists($file)) {
             $backupFile = $backupDir . '/' . str_replace('/', '_', $file);
-            copy($file, $backupFile);
-            echo "✅ Backed up: {$file}\n";
+            if (copy($file, $backupFile)) {
+                echo "✅ Backed up: {$file}\n";
+                $backupCount++;
+            } else {
+                echo "⚠️  Warning: Could not backup {$file}\n";
+            }
+        } else {
+            echo "ℹ️  File not found: {$file} (will be created)\n";
         }
     }
     
-    echo "📁 Backups created in: {$backupDir}\n";
+    if ($backupCount > 0) {
+        echo "📁 Backups created in: {$backupDir}\n";
+    } else {
+        echo "ℹ️  No files to backup\n";
+    }
     return true;
 }
 
@@ -207,11 +255,22 @@ function updateSystemConfig()
     $systemConfigPath = 'packages/Webkul/Admin/src/Config/system.php';
     
     if (!file_exists($systemConfigPath)) {
-        echo "❌ Error: Admin system.php not found\n";
+        echo "❌ Error: Admin system.php not found at {$systemConfigPath}\n";
+        echo "ℹ️  Make sure you're running this from the Bagisto root directory\n";
+        return false;
+    }
+
+    if (!is_writable($systemConfigPath)) {
+        echo "❌ Error: Cannot write to {$systemConfigPath}. Check permissions.\n";
         return false;
     }
 
     $systemConfig = file_get_contents($systemConfigPath);
+    
+    if ($systemConfig === false) {
+        echo "❌ Error: Could not read {$systemConfigPath}\n";
+        return false;
+    }
     
     // Check if already added
     if (strpos($systemConfig, 'sales.payment_methods.mercadopago') !== false) {
@@ -223,10 +282,21 @@ function updateSystemConfig()
     
     // Find insertion point (before order_settings)
     $insertPoint = "    ], [\n        'key'  => 'sales.order_settings',";
-    $replacement = $mercadoPagoConfig . "\n    ], [\n        'key'  => 'sales.order_settings',";
+    
+    if (strpos($systemConfig, $insertPoint) === false) {
+        echo "⚠️  Warning: Could not find insertion point. Adding at the end.\n";
+        $insertPoint = "];\n";
+        $replacement = $mercadoPagoConfig . "\n];\n";
+    } else {
+        $replacement = $mercadoPagoConfig . "\n    ], [\n        'key'  => 'sales.order_settings',";
+    }
     
     $updatedConfig = str_replace($insertPoint, $replacement, $systemConfig);
-    file_put_contents($systemConfigPath, $updatedConfig);
+    
+    if (file_put_contents($systemConfigPath, $updatedConfig) === false) {
+        echo "❌ Error: Could not write to {$systemConfigPath}\n";
+        return false;
+    }
     
     echo "✅ Added Mercado Pago admin configuration\n";
     
@@ -248,10 +318,36 @@ function updateTranslations()
         
         if (!file_exists($translationPath)) {
             echo "⚠️  Warning: Translation file not found: {$translationPath}\n";
+            echo "ℹ️  Creating directory structure...\n";
+            
+            // Create directory if it doesn't exist
+            $dir = dirname($translationPath);
+            if (!is_dir($dir)) {
+                if (!mkdir($dir, 0755, true)) {
+                    echo "❌ Error: Could not create directory {$dir}\n";
+                    continue;
+                }
+            }
+            
+            // Create basic translation file structure
+            $basicContent = "<?php\n\nreturn [\n    // Mercado Pago translations will be added here\n];\n";
+            if (file_put_contents($translationPath, $basicContent) === false) {
+                echo "❌ Error: Could not create {$translationPath}\n";
+                continue;
+            }
+        }
+
+        if (!is_writable($translationPath)) {
+            echo "❌ Error: Cannot write to {$translationPath}. Check permissions.\n";
             continue;
         }
 
         $currentTranslations = file_get_contents($translationPath);
+        
+        if ($currentTranslations === false) {
+            echo "❌ Error: Could not read {$translationPath}\n";
+            continue;
+        }
         
         // Check if already added
         if (strpos($currentTranslations, 'mercadopago') !== false) {
@@ -261,11 +357,23 @@ function updateTranslations()
 
         // Find insertion point
         $insertPoint = "'title'                          => 'Título',\n                ],\n            ],";
-        $newTranslations = formatTranslations($content);
-        $replacement = $newTranslations . "\n                ],\n            ],";
+        
+        if (strpos($currentTranslations, $insertPoint) === false) {
+            echo "⚠️  Warning: Could not find translation insertion point. Adding at the end.\n";
+            $insertPoint = "];\n";
+            $newTranslations = formatTranslations($content);
+            $replacement = $newTranslations . "\n];\n";
+        } else {
+            $newTranslations = formatTranslations($content);
+            $replacement = $newTranslations . "\n                ],\n            ],";
+        }
         
         $updatedTranslations = str_replace($insertPoint, $replacement, $currentTranslations);
-        file_put_contents($translationPath, $updatedTranslations);
+        
+        if (file_put_contents($translationPath, $updatedTranslations) === false) {
+            echo "❌ Error: Could not write to {$translationPath}\n";
+            continue;
+        }
         
         echo "✅ Added {$locale} translations\n";
     }
