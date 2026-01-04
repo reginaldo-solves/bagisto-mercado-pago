@@ -1,0 +1,101 @@
+<!DOCTYPE html >
+<html lang="es">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>MercadoLibre Argentina - Parece que esta página no existe</title>
+<link href="http://www.mercadolibre.com/org-img/mkt/error/css/error_404.css" type="text/css" rel="stylesheet"/>
+<link href="http://www.ar.mlstatic.com/jm/ml.api.webcomponent.CascadingStyleSheetsController?name=CSSMLKADL&amp;v=20100812_1650" type="text/css" rel="stylesheet">
+<meta name="robots" content="noindex,nofollow" />
+<base href="http://www.mercadolibre.com.ar/" />
+</head>
+<body>
+<script> 
+function getCookieValue(name) {
+	var start=document.cookie.indexOf(name+"=");
+	var len=start+name.length+1;
+	if (start == -1)
+		return null;
+	var end=document.cookie.indexOf(";",len);
+	if (end==-1)
+		end=document.cookie.length;
+	return unescape(document.cookie.substring(len,end));
+}
+ 
+function logoutTargetUrl() {
+	var baseUrl = document.getElementsByTagName('base')[0].href;
+	baseUrl = baseUrl.substring(0,baseUrl.indexOf("/",7));
+	var redirectUrl = oldUrl.substring(oldUrl.indexOf("/",7)+1);
+	window.location=baseUrl+"/jm/logout?urlTo="+escape(redirectUrl);
+}
+ 
+function setLog(lblLogout){
+	ck = getCookieValue("orguserid");
+	if (ck!=null && ck.length >= 4 ) {
+		document.write("<a target=\"_top\" href=\"javascript:logoutTargetUrl();\" class=\"hpcateg\" id=\"MENU:SALIR\">"+lblLogout+"</a>");
+	}
+}
+function setReg(lblRegistrarse){
+	ck = getCookieValue("orguserid");
+	if (ck!=null && ck.length >= 4 ) {
+	
+	} else {
+		document.write("<a href=\"/jm/reg\" target=\"_blank\" rel=\"nofollow\">"+lblRegistrarse+"</a>");
+	}
+}
+</script> 
+<div id="layout">
+  <div class="menu">
+
+	<a href="/">
+      <div class="logo">
+        <h1>MercadoLibre. Donde compras y vendes.</h1>
+      </div>
+      </a>
+      <div class="sub">
+        <p><a id="lnk-inicio" href="/">Inicio</a>
+          <script>setLog('Salir');</script>
+
+          <span>|</span><a href="/ayuda_home">Ayuda</a><span>|</span><a rel="nofollow" href="/jm/myML">Mi MercadoLibre</a><span>|</span><a rel="nofollow" href="/jm/sell">Vender</a><span>|</span>
+          <script>setReg("Regístrate");</script>
+        <div class="buscador">
+          <form method="get" action="/jm/search" id="formBuscar">
+            <input type="hidden" value="L" name="as_display_type">
+
+            <label accesskey="tb" for="as_word"><span>Ingresa tu búsqueda</span>
+            <input type="text" class="i-buscar" tabindex="1" value="" maxlength="60" id="as_inner_word" name="as_word" autocomplete="off">
+            </label>
+            <input type="submit" tabindex="2" accesskey="b" value="Buscar" class="b-buscar">
+          </form>
+        </div>
+      </div>
+</div>
+
+  <div class="pagina-error-es">
+    <div class="imagen_lupa"><img src="http://www.mercadolibre.com/org-img/mkt/error/img/lupa.gif" alt="Parece que esta pagina no existe"></div>
+    <div class="textos">
+      <h2>Parece que esta página no existe</h2>
+      <ul>
+        <li><a href="/">Ir a la Página Principal</a>.</li>
+      </ul>
+
+    </div>
+  </div>
+  
+
+  <div id="footer">
+    <div class="footer-es">
+      <p><a rel="nofollow" href="/">Inicio </a>|<a href="/sitemap.html"> Mapa del Sitio </a>|<a href="http://www.mercadolibre.com"> Ver otros países</a></p>
+
+      <hr>
+      <div class="copyright">El uso de este sitio web implica la aceptación de los<a rel="nofollow" target="_blank" href="/seguro_terminos.html"> Términos y Condiciones</a> y de las<a rel="nofollow" href="/seguro_privacidad.html"> Políticas de Privacidad</a> de MercadoLibre S.R.L. 
+        Copyright &copy; 1999-2010 MercadoLibre S.R.L.</div>
+    </div>
+
+  </div>
+  
+</div>
+</script>
+<script type="text/javascript" src="http://error.mercadolibre.com/ErrorCounterFromNginx.js"></script>
+</body>
+</html>
+

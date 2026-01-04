@@ -4,6 +4,10 @@
     "isEntry": true,
     "src": "resources/css/app.css"
   },
+  "resources/images/mercadopago.png": {
+    "file": "assets/mercadopago-d86673a6.png",
+    "src": "resources/images/mercadopago.png"
+  },
   "resources/js/app.css": {
     "file": "assets/app-c04ede37.css",
     "src": "resources/js/app.css"
