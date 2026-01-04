@@ -85,11 +85,22 @@ class MercadoPago extends Payment
      */
     public function getRedirectUrl()
     {
+        // For card payments, redirect to our payment form
+        // For other methods (Pix, Boleto), create preference
         if (! $this->cart) {
             $this->setCart();
         }
 
         try {
+            // Check if we should use our payment form or Mercado Pago redirect
+            $paymentMethods = $this->getConfigData('payment_methods', []);
+            
+            // If credit card is enabled, use our payment form
+            if (isset($paymentMethods['credit_card']['enabled']) && $paymentMethods['credit_card']['enabled']) {
+                return route('mercadopago.payment.form');
+            }
+            
+            // For other methods, create preference and redirect to Mercado Pago
             $preference = $this->createPreference($this->cart);
             
             if (! $preference) {
