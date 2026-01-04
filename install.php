@@ -17,6 +17,10 @@ if (!file_exists('artisan')) {
     exit(1);
 }
 
+// Create backup directory
+echo "📋 Creating backup...\n";
+createBackups();
+
 echo "📋 Step 1: Updating composer.json...\n";
 updateComposerJson();
 
@@ -29,7 +33,10 @@ updateSystemConfig();
 echo "📋 Step 4: Adding translations...\n";
 updateTranslations();
 
-echo "📋 Step 5: Running post-install commands...\n";
+echo "📋 Step 5: Installing dependencies...\n";
+installDependencies();
+
+echo "📋 Step 6: Running post-install commands...\n";
 runPostInstallCommands();
 
 echo "\n✅ Mercado Pago installed successfully!\n";
@@ -38,7 +45,41 @@ echo "   1. composer dump-autoload\n";
 echo "   2. php artisan config:clear\n";
 echo "   3. php artisan migrate --path=packages/Webkul/MercadoPago/database/migrations\n";
 echo "   4. Access admin panel to configure\n";
-echo "\n🎯 Installation complete!\n";
+echo "\n� Webhook Information:\n";
+echo "   Your webhook URL will be: https://yourstore.com/mercadopago/webhook\n";
+echo "   Note: Use 'mercadopago' (without hyphen) in the URL\n";
+echo "\n�🎯 Installation complete!\n";
+
+/**
+ * Create backups of files that will be modified.
+ */
+function createBackups()
+{
+    $backupDir = 'backup_mercadopago_' . date('Y-m-d_H-i-s');
+    
+    if (!is_dir($backupDir)) {
+        mkdir($backupDir, 0755, true);
+    }
+    
+    $filesToBackup = [
+        'composer.json',
+        'bootstrap/providers.php',
+        'packages/Webkul/Admin/src/Config/system.php',
+        'packages/Webkul/Admin/src/Resources/lang/en/app.php',
+        'packages/Webkul/Admin/src/Resources/lang/pt_BR/app.php'
+    ];
+    
+    foreach ($filesToBackup as $file) {
+        if (file_exists($file)) {
+            $backupFile = $backupDir . '/' . str_replace('/', '_', $file);
+            copy($file, $backupFile);
+            echo "✅ Backed up: {$file}\n";
+        }
+    }
+    
+    echo "📁 Backups created in: {$backupDir}\n";
+    return true;
+}
 
 /**
  * Update composer.json to add Mercado Pago autoload.
@@ -52,7 +93,18 @@ function updateComposerJson()
         return false;
     }
 
+    // Check if file is writable
+    if (!is_writable($composerPath)) {
+        echo "❌ Error: composer.json is not writable. Check permissions.\n";
+        return false;
+    }
+
     $composer = json_decode(file_get_contents($composerPath), true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        echo "❌ Error: Invalid JSON in composer.json\n";
+        return false;
+    }
     
     // Check if already added
     if (isset($composer['autoload']['psr-4']['Webkul\\MercadoPago\\'])) {
@@ -63,7 +115,12 @@ function updateComposerJson()
     // Add autoload
     $composer['autoload']['psr-4']['Webkul\\MercadoPago\\'] = 'packages/Webkul/MercadoPago/src/';
     
-    file_put_contents($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $jsonContent = json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if (file_put_contents($composerPath, $jsonContent) === false) {
+        echo "❌ Error: Could not write to composer.json\n";
+        return false;
+    }
+    
     echo "✅ Added Mercado Pago to composer.json\n";
     
     return true;
@@ -170,6 +227,34 @@ function updateTranslations()
         file_put_contents($translationPath, $updatedTranslations);
         
         echo "✅ Added {$locale} translations\n";
+    }
+    
+    return true;
+}
+
+/**
+ * Install Mercado Pago dependencies.
+ */
+function installDependencies()
+{
+    echo "🔄 Installing Mercado Pago SDK...\n";
+    
+    // Check if composer is available
+    if (!shell_exec('which composer')) {
+        echo "⚠️  Warning: Composer not found. Please install manually: composer require mercadopago/dx-php\n";
+        return true;
+    }
+    
+    // Install Mercado Pago SDK
+    $output = shell_exec('composer require mercadopago/dx-php 2>&1');
+    
+    if (strpos($output, 'already installed') !== false || strpos($output, 'is already installed') !== false) {
+        echo "ℹ️  Mercado Pago SDK already installed\n";
+    } elseif (strpos($output, 'Successfully installed') !== false || strpos($output, 'Package operations:') !== false) {
+        echo "✅ Mercado Pago SDK installed successfully\n";
+    } else {
+        echo "⚠️  Warning: Could not install Mercado Pago SDK automatically\n";
+        echo "   Please run manually: composer require mercadopago/dx-php\n";
     }
     
     return true;
