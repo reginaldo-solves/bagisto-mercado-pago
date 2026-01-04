@@ -6,9 +6,10 @@ use Webkul\Payment\Payment\Payment;
 use MercadoPago\Client\PaymentClient;
 use MercadoPago\Client\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
-use MercadoPago\Payment as MercadoPagoPayment;
-use MercadoPago\Item as MercadoPagoItem;
-use MercadoPago\Payer as MercadoPagoPayer;
+use MercadoPago\Resources\Payment as MercadoPagoPayment;
+use MercadoPago\Resources\Preference;
+use MercadoPago\Resources\Item;
+use MercadoPago\Resources\Payer;
 
 class MercadoPago extends Payment
 {
@@ -44,15 +45,13 @@ class MercadoPago extends Payment
         $accessToken = $this->getConfigData('access_token');
 
         if ($accessToken) {
-            SDK::setAccessToken($accessToken);
-            SDK::setIntegratorId('bagisto_mp');
+            MercadoPagoConfig::setAccessToken($accessToken);
+            MercadoPagoConfig::setIntegratorId('bagisto_mp');
             
-            if ($this->getConfigData('debug')) {
-                SDK::enableRetryRequests(true);
+            if ($this->getConfigData('sandbox')) {
+                MercadoPagoConfig::setEnvironment('sandbox');
             }
         }
-        
-        $this->mercadopago = new SDK();
     }
 
     /**
@@ -77,33 +76,35 @@ class MercadoPago extends Payment
      * Create a preference in Mercado Pago
      *
      * @param  \Webkul\Checkout\Contracts\Cart  $cart
-     * @return \MercadoPago\Preference
+     * @return \MercadoPago\Resources\Preference
      */
     protected function createPreference($cart)
     {
-        $preference = new Preference();
+        $client = new PreferenceClient();
         
         // Configurar itens do carrinho
         $items = $this->getItems($cart);
-        $preference->items = $items;
         
         // Configurar pagador
-        $preference->payer = $this->getPayer($cart);
+        $payer = $this->getPayer($cart);
         
-        // Configurar URLs de retorno
-        $preference->back_urls = [
-            'success' => route('mercadopago.success'),
-            'failure' => route('mercadopago.failure'),
-            'pending' => route('mercadopago.pending'),
+        // Criar preferência
+        $preference = [
+            'items' => $items,
+            'payer' => $payer,
+            'back_urls' => [
+                'success' => route('mercadopago.success'),
+                'failure' => route('mercadopago.failure'),
+                'pending' => route('mercadopago.pending'),
+            ],
+            'auto_return' => 'approved',
+            'external_reference' => $cart->id,
+            'notification_url' => route('mercadopago.webhook'),
         ];
         
-        $preference->auto_return = 'approved';
-        $preference->external_reference = $cart->id;
-        $preference->notification_url = route('mercadopago.webhook');
+        $result = $client->create($preference);
         
-        $preference->save();
-        
-        return $preference;
+        return $result;
     }
 
     /**
@@ -118,14 +119,15 @@ class MercadoPago extends Payment
         
         // Adicionar itens do carrinho
         foreach ($cart->items as $item) {
-            $mpItem = new MercadoPagoItem();
-            $mpItem->title = $item->name;
-            $mpItem->quantity = $item->quantity;
-            $mpItem->currency_id = $cart->cart_currency_code;
-            $mpItem->unit_price = $item->price;
+            $mpItem = [
+                'title' => $item->name,
+                'quantity' => $item->quantity,
+                'currency_id' => $cart->cart_currency_code,
+                'unit_price' => (float) $item->price,
+            ];
             
             if ($item->product->images->isNotEmpty()) {
-                $mpItem->picture_url = $item->product->images->first()->url;
+                $mpItem['picture_url'] = $item->product->images->first()->url;
             }
             
             $items[] = $mpItem;
@@ -133,11 +135,12 @@ class MercadoPago extends Payment
         
         // Adicionar frete como item separado
         if ($cart->shipping_amount > 0) {
-            $shippingItem = new MercadoPagoItem();
-            $shippingItem->title = 'Frete';
-            $shippingItem->quantity = 1;
-            $shippingItem->currency_id = $cart->cart_currency_code;
-            $shippingItem->unit_price = $cart->shipping_amount;
+            $shippingItem = [
+                'title' => 'Frete',
+                'quantity' => 1,
+                'currency_id' => $cart->cart_currency_code,
+                'unit_price' => (float) $cart->shipping_amount,
+            ];
             
             $items[] = $shippingItem;
         }
@@ -149,26 +152,26 @@ class MercadoPago extends Payment
      * Get payer information
      *
      * @param  \Webkul\Checkout\Contracts\Cart  $cart
-     * @return \MercadoPago\Payer
+     * @return array
      */
     protected function getPayer($cart)
     {
         $billing = $cart->billing_address;
         
-        $payer = new MercadoPagoPayer();
-        $payer->name = $billing->first_name . ' ' . $billing->last_name;
-        $payer->email = $cart->customer_email;
-        $payer->phone = [
-            'area_code' => substr(preg_replace('/\D/', '', $billing->phone), 0, 2),
-            'number' => substr(preg_replace('/\D/', '', $billing->phone), 2)
-        ];
-        
-        $payer->address = [
-            'street_name' => $billing->address1,
-            'street_number' => $billing->address2,
-            'zip_code' => $billing->postcode,
-            'city' => $billing->city,
-            'federal_unit' => $billing->state
+        $payer = [
+            'name' => $billing->first_name . ' ' . $billing->last_name,
+            'email' => $cart->customer_email,
+            'phone' => [
+                'area_code' => substr(preg_replace('/\D/', '', $billing->phone), 0, 2),
+                'number' => substr(preg_replace('/\D/', '', $billing->phone), 2)
+            ],
+            'address' => [
+                'street_name' => $billing->address1,
+                'street_number' => $billing->address2,
+                'zip_code' => $billing->postcode,
+                'city' => $billing->city,
+                'federal_unit' => $billing->state
+            ]
         ];
         
         return $payer;
@@ -267,7 +270,8 @@ class MercadoPago extends Payment
                 throw new \Exception('ID do pagamento não encontrado no webhook');
             }
             
-            $payment = MercadoPagoPayment::find_by_id($paymentId);
+            $client = new PaymentClient();
+            $payment = $client->get($paymentId);
             
             if (! $payment) {
                 throw new \Exception('Pagamento não encontrado: ' . $paymentId);

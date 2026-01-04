@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Reginaldo\MercadoPago\Http\Controllers\MercadoPagoController;
+use Webkul\MercadoPago\Http\Controllers\MercadoPagoController;
 
 // Rotas de retorno do Mercado Pago
 Route::middleware(['web'])->group(function () {

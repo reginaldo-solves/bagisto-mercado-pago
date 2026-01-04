@@ -27,12 +27,12 @@ class MercadoPagoController extends Controller
     /**
      * Create a new controller instance.
      *
-     * @param  \Reginaldo\MercadoPago\Payment\MercadoPago  $mercadopago
+     * @param  \Webkul\MercadoPago\Payment\MercadoPago  $mercadopago
      * @param  \Webkul\Sales\Repositories\OrderRepository  $orderRepository
      * @return void
      */
     public function __construct(
-        MercadoPagoPayment $mercadopago,
+        MercadoPago $mercadopago,
         OrderRepository $orderRepository
     ) {
         $this->mercadopago = $mercadopago;
