@@ -5,6 +5,7 @@ namespace Webkul\MercadoPago\Payment;
 use Webkul\Payment\Payment\Payment;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\Client\Preference\PreferenceClient;
+use MercadoPago\Client\PreApproval\PreApprovalClient;
 use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Resources\Payment as MercadoPagoPayment;
 
@@ -331,6 +332,115 @@ class MercadoPago extends Payment
                 'status' => 'error',
                 'message' => $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Get payment methods for BIN
+     *
+     * @param  string  $bin
+     * @return array
+     */
+    public function getPaymentMethods($bin)
+    {
+        try {
+            $client = new PaymentClient();
+            
+            $paymentMethods = $client->get([
+                'bin' => $bin
+            ]);
+
+            return $paymentMethods;
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago getPaymentMethods error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Create recurring plan
+     *
+     * @param  array  $planData
+     * @return mixed
+     */
+    public function createRecurringPlan($planData)
+    {
+        try {
+            $client = new PreApprovalClient();
+            
+            $result = $client->create($planData);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago createRecurringPlan error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Create subscription
+     *
+     * @param  array  $subscriptionData
+     * @return mixed
+     */
+    public function createSubscription($subscriptionData)
+    {
+        try {
+            $client = new PreApprovalClient();
+            
+            $result = $client->create($subscriptionData);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago createSubscription error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get subscription status
+     *
+     * @param  string  $subscriptionId
+     * @return mixed
+     */
+    public function getSubscriptionStatus($subscriptionId)
+    {
+        try {
+            $client = new PreApprovalClient();
+            
+            $result = $client->get($subscriptionId);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago getSubscriptionStatus error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Cancel subscription
+     *
+     * @param  string  $subscriptionId
+     * @return bool
+     */
+    public function cancelSubscription($subscriptionId)
+    {
+        try {
+            $client = new PreApprovalClient();
+            
+            $result = $client->update($subscriptionId, [
+                'status' => 'cancelled'
+            ]);
+            
+            return $result && $result->status === 'cancelled';
+            
+        } catch (\Exception $e) {
+            \Log::error('Mercado Pago cancelSubscription error: ' . $e->getMessage());
+            return false;
         }
     }
 }

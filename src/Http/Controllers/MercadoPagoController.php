@@ -63,19 +63,48 @@ class MercadoPagoController extends Controller
      */
     public function success(Request $request)
     {
-        $orderId = $request->input('order_id');
-        $order = $this->orderRepository->find($orderId);
-
-        if (! $order) {
-            return redirect()->route('shop.checkout.cart.index');
+        // Get payment ID from query parameters
+        $paymentId = $request->get('payment_id');
+        $subscriptionId = $request->get('preapproval_id');
+        
+        if ($subscriptionId) {
+            // Handle recurring payment success
+            return view('mercadopago::success')
+                ->with('subscription_id', $subscriptionId)
+                ->with('frequency', $request->get('frequency', 'monthly'))
+                ->with('amount', $request->get('amount', 0))
+                ->with('next_charge_date', $this->calculateNextChargeDate($request->get('frequency', 'monthly')));
         }
-
-        // Limpar carrinho
-        if ($cart = Cart::getCart()) {
-            Cart::deActivateCart();
+        
+        if ($paymentId) {
+            // Handle one-time payment success
+            return view('mercadopago::success')
+                ->with('payment_id', $paymentId)
+                ->with('order_id', $request->get('external_reference'))
+                ->with('amount', $request->get('amount', 0));
         }
+        
+        // Fallback success page
+        return view('mercadopago::success');
+    }
 
-        return view('mercadopago::payment.success', compact('order'));
+    /**
+     * Calculate next charge date for recurring payments
+     *
+     * @param  string  $frequency
+     * @return string
+     */
+    protected function calculateNextChargeDate($frequency)
+    {
+        $now = now();
+        
+        if ($frequency === 'monthly') {
+            return $now->addMonth()->format('d/m/Y');
+        } elseif ($frequency === 'yearly') {
+            return $now->addYear()->format('d/m/Y');
+        }
+        
+        return $now->addMonth()->format('d/m/Y');
     }
 
     /**
