@@ -1,6 +1,12 @@
-@extends('shop::layouts.master')
+<x-shop::layouts>
+    <title>Pagamento Realizado - Mercado Pago</title>
 
-@section('content')
+    <x-slot:meta>
+        <meta name="description" content="Pagamento realizado com sucesso no Mercado Pago"/>
+        <meta name="keywords" content="pagamento, sucesso, mercado pago"/>
+    </x-slot>
+
+    <x-slot:content>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -162,9 +168,9 @@
         </div>
     </div>
 </div>
-@endsection
+    </x-slot>
 
-@push('scripts')
+    <x-slot:scripts>
 <script>
 function confirmCancelSubscription(subscriptionId) {
     const modal = new bootstrap.Modal(document.getElementById('cancelSubscriptionModal'));
@@ -196,4 +202,5 @@ function confirmCancelSubscription(subscriptionId) {
     };
 }
 </script>
-@endpush
+    </x-slot>
+</x-shop::layouts>

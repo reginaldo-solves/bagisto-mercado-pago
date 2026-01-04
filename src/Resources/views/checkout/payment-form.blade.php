@@ -1,6 +1,12 @@
-@extends('shop::layouts.master')
+<x-shop::layouts>
+    <title>Pagamento Mercado Pago</title>
 
-@section('content')
+    <x-slot:meta>
+        <meta name="description" content="Pague com Mercado Pago - Cartão de Crédito, Pix e Boleto"/>
+        <meta name="keywords" content="Mercado Pago, pagamento, cartão de crédito, pix, boleto"/>
+    </x-slot>
+
+    <x-slot:content>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -264,9 +270,9 @@
         </div>
     </div>
 </div>
-@endsection
+    </x-slot>
 
-@push('scripts')
+    <x-slot:scripts>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -463,4 +469,5 @@ document.addEventListener('DOMContentLoaded', function() {
     border-color: #0096C7;
 }
 </style>
-@endpush
+    </x-slot>
+</x-shop::layouts>
