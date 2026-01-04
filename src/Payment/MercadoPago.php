@@ -3,8 +3,8 @@
 namespace Webkul\MercadoPago\Payment;
 
 use Webkul\Payment\Payment\Payment;
-use MercadoPago\Client\PaymentClient;
-use MercadoPago\Client\PreferenceClient;
+use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Resources\Payment as MercadoPagoPayment;
 use MercadoPago\Resources\Preference;
@@ -127,18 +127,17 @@ class MercadoPago extends Payment
             $payer = $this->getPayer($cart);
             
             // Criar preferência
-            $preference = [
-                'items' => $items,
-                'payer' => $payer,
-                'back_urls' => [
-                    'success' => route('mercadopago.success'),
-                    'failure' => route('mercadopago.failure'),
-                    'pending' => route('mercadopago.pending'),
-                ],
-                'auto_return' => 'approved',
-                'external_reference' => $cart->id,
-                'notification_url' => route('mercadopago.webhook'),
+            $preference = new Preference();
+            $preference->items = $items;
+            $preference->payer = $payer;
+            $preference->back_urls = [
+                'success' => route('mercadopago.success'),
+                'failure' => route('mercadopago.failure'),
+                'pending' => route('mercadopago.pending'),
             ];
+            $preference->auto_return = 'approved';
+            $preference->external_reference = $cart->id;
+            $preference->notification_url = route('mercadopago.webhook');
             
             $result = $client->create($preference);
             
@@ -162,15 +161,14 @@ class MercadoPago extends Payment
         
         // Adicionar itens do carrinho
         foreach ($cart->items as $item) {
-            $mpItem = [
-                'title' => $item->name,
-                'quantity' => $item->quantity,
-                'currency_id' => $cart->cart_currency_code,
-                'unit_price' => (float) $item->price,
-            ];
+            $mpItem = new Item();
+            $mpItem->title = $item->name;
+            $mpItem->quantity = $item->quantity;
+            $mpItem->currency_id = $cart->cart_currency_code;
+            $mpItem->unit_price = (float) $item->price;
             
             if ($item->product->images->isNotEmpty()) {
-                $mpItem['picture_url'] = $item->product->images->first()->url;
+                $mpItem->picture_url = $item->product->images->first()->url;
             }
             
             $items[] = $mpItem;
@@ -178,12 +176,11 @@ class MercadoPago extends Payment
         
         // Adicionar frete como item separado
         if ($cart->shipping_amount > 0) {
-            $shippingItem = [
-                'title' => 'Frete',
-                'quantity' => 1,
-                'currency_id' => $cart->cart_currency_code,
-                'unit_price' => (float) $cart->shipping_amount,
-            ];
+            $shippingItem = new Item();
+            $shippingItem->title = 'Frete';
+            $shippingItem->quantity = 1;
+            $shippingItem->currency_id = $cart->cart_currency_code;
+            $shippingItem->unit_price = (float) $cart->shipping_amount;
             
             $items[] = $shippingItem;
         }
@@ -201,20 +198,19 @@ class MercadoPago extends Payment
     {
         $billing = $cart->billing_address;
         
-        $payer = [
-            'name' => $billing->first_name . ' ' . $billing->last_name,
-            'email' => $cart->customer_email,
-            'phone' => [
-                'area_code' => substr(preg_replace('/\D/', '', $billing->phone), 0, 2),
-                'number' => substr(preg_replace('/\D/', '', $billing->phone), 2)
-            ],
-            'address' => [
-                'street_name' => $billing->address1,
-                'street_number' => $billing->address2,
-                'zip_code' => $billing->postcode,
-                'city' => $billing->city,
-                'federal_unit' => $billing->state
-            ]
+        $payer = new Payer();
+        $payer->name = $billing->first_name . ' ' . $billing->last_name;
+        $payer->email = $cart->customer_email;
+        $payer->phone = [
+            'area_code' => substr(preg_replace('/\D/', '', $billing->phone), 0, 2),
+            'number' => substr(preg_replace('/\D/', '', $billing->phone), 2)
+        ];
+        $payer->address = [
+            'street_name' => $billing->address1,
+            'street_number' => $billing->address2,
+            'zip_code' => $billing->postcode,
+            'city' => $billing->city,
+            'federal_unit' => $billing->state
         ];
         
         return $payer;
