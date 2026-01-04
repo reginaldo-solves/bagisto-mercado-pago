@@ -147,8 +147,8 @@ Eventos:
 Título: Mercado Pago
 Descrição: Pague com Pix, Cartão de Crédito e Boleto
 Logotipo: [Logo do Mercado Pago - 55x45px]
-Chave Pública: TEST-0000000000000000-0000000000000000
-Token de Acesso: TEST-0000000000000000-0000000000000000
+Chave Pública: TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx
+Token de Acesso: TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx
 URL Webhook: https://sualoja.com/mercado-pago/webhook
 Segredo Webhook: sua-chave-secreta-aqui
 Status: ✅ Ativado
