@@ -49,23 +49,47 @@ echo "📋 Instalando dependências...\n";
 installDependencies();
 
 // Limpeza e otimização (Padrões Técnicos)
-echo "📋 Otimizando sistema...\n";
+echo " Otimizando sistema...\n";
 runPostInstallCommands();
 
-echo "\n✅ Mercado Pago instalado com sucesso!\n";
-echo "\n🎯 Siga os princípios da constituição do projeto:\n";
-echo "   📦 Arquitetura Modular: Pacote independente em packages/Webkul/Payment/\n";
-echo "   🔗 Integração Oficial: API Mercado Pago sem modificações no core\n";
-echo "   🌐 Padrão pt-BR: Todo conteúdo em português do Brasil\n";
-echo "\n🔄 Próximos passos:\n";
+echo "\n Mercado Pago instalado com sucesso!\n";
+echo "\n Siga os princípios da constituição do projeto:\n";
+echo "  Step 3: Adding admin configuration...\n";
+updateSystemConfig();
+
+echo " Step 4: Adding translations...\n";
+updateTranslations();
+
+echo " Step 5: Installing dependencies...\n";
+installDependencies();
+
+echo " Step 6: Running post-install commands...\n";
+runPostInstallCommands();
+
+echo "\n Mercado Pago instalado com sucesso!\n";
+echo "\n Estrutura do pacote:\n";
+echo "   packages/Webkul/MercadoPago/\n";
+echo "   src/ - Código fonte (Payment, Controllers, Models, Providers)\n";
+echo "   routes/ - Rotas da API e Web\n";
+echo "   database/migrations/ - Migrações do banco\n";
+echo "   resources/views/ - Templates Blade\n";
+echo "   config/ - Configurações do pacote\n";
+echo "   specs/ - Especificações do projeto\n";
+echo "   .specify/ - Framework de especificações\n";
+echo "   .windsurf/ - Ferramentas de desenvolvimento\n";
+echo "   install.php - Script de instalação automatizado\n";
+echo "   README.md - Documentação completa\n";
+echo "   CHANGELOG.md - Histórico de versões\n";
+echo "   LICENSE - Licença MIT\n";
+echo "\n Próximos passos:\n";
 echo "   1. composer dump-autoload\n";
 echo "   2. php artisan config:clear\n";
 echo "   3. php artisan migrate --path=packages/Webkul/MercadoPago/database/migrations\n";
 echo "   4. Acesse o painel admin para configurar\n";
-echo "\n🌐 Informações do Webhook:\n";
+echo "\n Informações do Webhook:\n";
 echo "   URL do webhook: https://sualoja.com/mercadopago/webhook\n";
 echo "   Importante: Use 'mercadopago' (sem hífen) na URL\n";
-echo "\n🎯 Instalação concluída seguindo as especificações!\n";
+echo "\n Instalação concluída seguindo as especificações do projeto!\n";
 
 /**
  * Create backups of files that will be modified.
