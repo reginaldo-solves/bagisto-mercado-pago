@@ -71,6 +71,7 @@ class MercadoPago extends Payment
             MercadoPagoConfig::setAccessToken($accessToken);
             MercadoPagoConfig::setIntegratorId('bagisto_mp');
             
+            // Usar constantes corretas do SDK
             if ($this->getConfigData('sandbox')) {
                 MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
             } else {
