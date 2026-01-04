@@ -51,11 +51,56 @@ php artisan config:clear
 php artisan route:clear
 ```
 
+## ⚠️ **IMPORTANTE: Modificações no Bagisto**
+
+Este pacote requer modificações nos arquivos core do Bagisto para funcionar corretamente.
+
+### 📋 **Arquivos Modificados:**
+- `composer.json` - Autoload PSR-4
+- `bootstrap/providers.php` - Service Provider
+- `packages/Webkul/Admin/src/Config/system.php` - Configuração admin
+- `packages/Webkul/Admin/src/Resources/lang/*/app.php` - Traduções
+
+### 🚀 **Métodos de Instalação:**
+
+#### **Opção 1: Instalação Automática (Recomendada)**
+```bash
+# Baixar e executar installer
+curl -sS https://raw.githubusercontent.com/reginaldo-solves/bagisto-mercado-pago/main/install.php | php
+
+# Ou manualmente
+cd packages/Webkul/MercadoPago
+php install.php
+```
+
+#### **Opção 2: Via Composer (Modificado)**
+```bash
+# Exigir pacote com auto-instalação
+composer require reginaldo-solves/bagisto-mercado-pago
+
+# Executar pós-instalação
+php artisan mercadopago:install
+```
+
+#### **Opção 3: Manual**
+Veja [INSTALLATION.md](INSTALLATION.md) para instruções detalhadas.
+
+### 🔧 **Contorno para Instalação Limpa:**
+
+Se você precisa instalar em uma instância limpa do Bagisto sem modificações:
+
+1. **Use o installer automático** (Opção 1)
+2. **Baixe o pacote completo** com as modificações
+3. **Execute as migrações** manualmente
+
 ## 📋 Instalação
 
 ### 1. Clonar o Pacote
 ```bash
-# Copiar para packages/Webkul/MercadoPago/
+# Opção A: Com auto-instalação
+git clone https://github.com/reginaldo-solves/bagisto-mercado-pago.git packages/Webkul/MercadoPago
+
+# Opção B: Manual (se já tem as modificações)
 cp -r /path/to/bagisto-mercado-pago /var/www/html/bagisto/packages/Webkul/MercadoPago
 ```
 
