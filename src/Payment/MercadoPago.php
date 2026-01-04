@@ -72,7 +72,9 @@ class MercadoPago extends Payment
             MercadoPagoConfig::setIntegratorId('bagisto_mp');
             
             if ($this->getConfigData('sandbox')) {
-                MercadoPagoConfig::setRuntimeEnviroment('sandbox');
+                MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
+            } else {
+                MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::SERVER);
             }
         }
     }
