@@ -6,7 +6,13 @@
     },
     "devDependencies": {
         "axios": "^1.7.9",
-        "laravel-vite-plugin": "^1.0",
-        "vite": "^5.4.12"
+        "laravel-vite-plugin": "^0.8.0",
+        "vite": "^4.0.0",
+        "vue": "^3.0.0",
+        "mitt": "^3.0.0",
+        "vee-validate": "^4.0.0",
+        "flatpickr": "^4.6.0",
+        "@vee-validate/i18n": "^4.0.0",
+        "@vee-validate/rules": "^4.0.0"
     }
 }
