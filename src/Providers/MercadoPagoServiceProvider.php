@@ -40,5 +40,9 @@ class MercadoPagoServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             dirname(__DIR__).'/Config/paymentmethods.php', 'payment_methods'
         );
+
+        $this->mergeConfigFrom(
+            dirname(__DIR__).'/Config/system.php', 'core'
+        );
     }
 }
